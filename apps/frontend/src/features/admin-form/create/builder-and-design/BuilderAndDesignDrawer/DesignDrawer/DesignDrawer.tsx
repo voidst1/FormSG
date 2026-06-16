@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import {
   Controller,
   UnpackNestedValue,
@@ -36,7 +36,10 @@ import Radio from '~components/Radio'
 
 import { useMutateFormPage } from '~features/admin-form/common/mutations'
 import { useCreatePageSidebar } from '~features/admin-form/create/common/CreatePageSidebarContext'
-import { FormDetailsSection } from '~features/admin-form/settings/components/FormDetailsSection'
+import {
+  FormDetailsSection,
+  FormTitleSubmitHandle,
+} from '~features/admin-form/settings/components/FormDetailsSection'
 import { useEnv } from '~features/env/queries'
 import { getTitleBg } from '~features/public-form/components/FormStartPage/useFormHeader'
 
@@ -190,6 +193,10 @@ export const DesignInput = (): JSX.Element | null => {
       const { logo, attachment, estTimeTaken, ...rest } = startPageData
       const estTimeTakenTransformed =
         estTimeTaken === '' ? undefined : estTimeTaken
+      const onSuccess = () => {
+        formTitleSubmitRef.current?.save()
+        handleCloseDrawer()
+      }
       if (logo.state !== FormLogoState.Custom) {
         startPageMutation.mutate(
           {
@@ -197,7 +204,7 @@ export const DesignInput = (): JSX.Element | null => {
             estTimeTaken: estTimeTakenTransformed,
             ...rest,
           },
-          { onSuccess: handleCloseDrawer },
+          { onSuccess },
         )
       } else {
         const customLogoMeta = await handleUploadLogo(attachment)
@@ -207,7 +214,7 @@ export const DesignInput = (): JSX.Element | null => {
             estTimeTaken: estTimeTakenTransformed,
             ...rest,
           },
-          { onSuccess: handleCloseDrawer },
+          { onSuccess },
         )
       }
     },
@@ -217,7 +224,15 @@ export const DesignInput = (): JSX.Element | null => {
     featureFlags.designDrawerFormTitle,
   )
 
+  const formTitleSubmitRef = useRef<FormTitleSubmitHandle | undefined>(
+    undefined,
+  )
+
   const handleClick = useCallback(async () => {
+    if (formTitleSubmitRef.current) {
+      const isValid = await formTitleSubmitRef.current.validate()
+      if (!isValid) return
+    }
     handleUpdateDesign().catch((error) => {
       toast({ description: error.message })
     })
@@ -342,7 +357,12 @@ export const DesignInput = (): JSX.Element | null => {
         <FormErrorMessage>{errors.colorTheme?.message}</FormErrorMessage>
       </FormControl>
 
-      {showDesignDrawerFormTitle && <FormDetailsSection />}
+      {showDesignDrawerFormTitle && (
+        <FormDetailsSection
+          enableAutosave={false}
+          submitRef={formTitleSubmitRef}
+        />
+      )}
 
       <FormControl
         isReadOnly={startPageMutation.isLoading}
