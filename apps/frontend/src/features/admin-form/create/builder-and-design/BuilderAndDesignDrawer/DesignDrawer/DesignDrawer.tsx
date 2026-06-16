@@ -50,6 +50,7 @@ import {
   FormStartPageInput,
   resetDesignStoreSelector,
   setCustomLogoMetaSelector,
+  setPreviewTitleSelector,
   setStartPageDataSelector,
   setStateSelector,
   startPageDataSelector,
@@ -88,6 +89,7 @@ export const DesignInput = (): JSX.Element | null => {
     startPageData,
     customLogoMeta,
     setStartPageData,
+    setPreviewTitle,
   } = useDesignStore(
     useCallback(
       (state) => ({
@@ -96,6 +98,7 @@ export const DesignInput = (): JSX.Element | null => {
         startPageData: startPageDataSelector(state),
         customLogoMeta: customLogoMetaSelector(state),
         setStartPageData: setStartPageDataSelector(state),
+        setPreviewTitle: setPreviewTitleSelector(state),
       }),
       [],
     ),
@@ -361,6 +364,7 @@ export const DesignInput = (): JSX.Element | null => {
         <FormDetailsSection
           enableAutosave={false}
           submitRef={formTitleSubmitRef}
+          onTitleChange={setPreviewTitle}
         />
       )}
 

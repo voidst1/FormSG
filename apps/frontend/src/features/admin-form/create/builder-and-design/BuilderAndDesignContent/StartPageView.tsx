@@ -26,6 +26,7 @@ import { useCreateTabForm } from '../useCreateTabForm'
 import {
   customLogoMetaSelector,
   DesignState,
+  previewTitleSelector,
   setStateSelector,
   startPageDataSelector,
   stateSelector,
@@ -47,13 +48,19 @@ export const StartPageView = () => {
   const setPaymentToInactive = usePaymentStore(setPaymentToInactiveSelector)
   const isDirty = useDirtyFieldStore(isDirtySelector)
 
-  const { designState, startPageData, customLogoMeta, setDesignState } =
-    useDesignStore((state) => ({
-      designState: stateSelector(state),
-      startPageData: startPageDataSelector(state),
-      customLogoMeta: customLogoMetaSelector(state),
-      setDesignState: setStateSelector(state),
-    }))
+  const {
+    designState,
+    startPageData,
+    customLogoMeta,
+    setDesignState,
+    previewTitle,
+  } = useDesignStore((state) => ({
+    designState: stateSelector(state),
+    startPageData: startPageDataSelector(state),
+    customLogoMeta: customLogoMetaSelector(state),
+    setDesignState: setStateSelector(state),
+    previewTitle: previewTitleSelector(state),
+  }))
 
   const { data: { logoBucketUrl } = {} } = useEnv(
     form?.startPage.logo.state === FormLogoState.Custom,
@@ -195,7 +202,7 @@ export const StartPageView = () => {
           {...formBannerLogoProps}
         />
         <FormHeader
-          title={form?.title}
+          title={previewTitle ?? form?.title}
           showHeader
           loggedInId={
             form && form.authType !== FormAuthType.NIL

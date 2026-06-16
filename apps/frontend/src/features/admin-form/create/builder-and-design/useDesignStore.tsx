@@ -38,9 +38,11 @@ export type DesignStore = {
   clearHoldingState: () => void
   startPageData?: FormStartPageInput
   customLogoMeta?: CustomLogoMeta
+  previewTitle?: string
   setState: (state: DesignState, holding?: boolean) => void
   setStartPageData: (startPageInput: FormStartPageInput) => void
   setCustomLogoMeta: (customLogoMetaData: CustomLogoMeta) => void
+  setPreviewTitle: (title: string | undefined) => void
   resetDesignStore: () => void
 }
 
@@ -74,10 +76,13 @@ export const useDesignStore = create<DesignStore>()(
       if (isEqual(current.customLogoMeta, customLogoMeta)) return
       set({ customLogoMeta })
     },
+    setPreviewTitle: (previewTitle: string | undefined) =>
+      set({ previewTitle }),
     resetDesignStore: () => {
       set({
         startPageData: undefined,
         customLogoMeta: undefined,
+        previewTitle: undefined,
       })
     },
   })),
@@ -112,6 +117,14 @@ export const setStartPageDataSelector = (
 export const setCustomLogoMetaSelector = (
   state: DesignStore,
 ): DesignStore['setCustomLogoMeta'] => state.setCustomLogoMeta
+
+export const previewTitleSelector = (
+  state: DesignStore,
+): DesignStore['previewTitle'] => state.previewTitle
+
+export const setPreviewTitleSelector = (
+  state: DesignStore,
+): DesignStore['setPreviewTitle'] => state.setPreviewTitle
 
 export const resetDesignStoreSelector = (
   state: DesignStore,

@@ -26,11 +26,13 @@ export interface FormTitleSubmitHandle {
 interface FormDetailsSectionProps {
   enableAutosave?: boolean
   submitRef?: MutableRefObject<FormTitleSubmitHandle | undefined>
+  onTitleChange?: (title: string) => void
 }
 
 export const FormDetailsSection = ({
   enableAutosave = true,
   submitRef,
+  onTitleChange,
 }: FormDetailsSectionProps): JSX.Element => {
   const { data: settings, isLoading: isLoadingSettings } =
     useAdminFormSettings()
@@ -43,6 +45,7 @@ export const FormDetailsSection = ({
             initialTitle={settings.title}
             enableAutosave={enableAutosave}
             submitRef={submitRef}
+            onTitleChange={onTitleChange}
           />
         ) : null}
       </Stack>
@@ -54,12 +57,14 @@ interface FormTitleInputProps {
   initialTitle: string
   enableAutosave?: boolean
   submitRef?: MutableRefObject<FormTitleSubmitHandle | undefined>
+  onTitleChange?: (title: string) => void
 }
 
 export const FormTitleInput = ({
   initialTitle,
   enableAutosave = true,
   submitRef,
+  onTitleChange,
 }: FormTitleInputProps): JSX.Element => {
   const { t } = useTranslation()
   const { formName } = t('features.common', { returnObjects: true })
@@ -147,6 +152,10 @@ export const FormTitleInput = ({
         render={({ field }) => (
           <Input
             {...field}
+            onChange={(e) => {
+              field.onChange(e)
+              onTitleChange?.(e.target.value)
+            }}
             onBlur={enableAutosave ? handleBlur : field.onBlur}
             onKeyDown={enableAutosave ? handleKeyDown : undefined}
           />
