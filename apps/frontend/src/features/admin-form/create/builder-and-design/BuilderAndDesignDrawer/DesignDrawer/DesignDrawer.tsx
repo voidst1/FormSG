@@ -6,7 +6,7 @@ import {
   useWatch,
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useMutation } from 'react-query'
+import { useMutation, useQueryClient } from 'react-query'
 import { useParams } from 'react-router-dom'
 import { useDebounce } from 'react-use'
 import {
@@ -14,7 +14,6 @@ import {
   Divider,
   Flex,
   FormControl,
-  FormLabel,
   Text,
   Textarea,
 } from '@chakra-ui/react'
@@ -29,14 +28,21 @@ import {
 } from 'formsg-shared/types'
 
 import { useToast } from '~hooks/useToast'
+import { useFormTitleValidationRules } from '~utils/formValidation'
 import { uploadLogo } from '~services/FileHandlerService'
 import FormErrorMessage from '~components/FormControl/FormErrorMessage'
+import FormLabel from '~components/FormControl/FormLabel'
+import Input from '~components/Input'
 import NumberInput from '~components/NumberInput'
 import Radio from '~components/Radio'
 
 import { useMutateFormPage } from '~features/admin-form/common/mutations'
+import {
+  adminFormKeys,
+  useAdminForm,
+} from '~features/admin-form/common/queries'
 import { useCreatePageSidebar } from '~features/admin-form/create/common/CreatePageSidebarContext'
-import { FormDetailsSection } from '~features/admin-form/settings/components/FormDetailsSection'
+import { updateFormTitle } from '~features/admin-form/settings/SettingsService'
 import { useEnv } from '~features/env/queries'
 import { getTitleBg } from '~features/public-form/components/FormStartPage/useFormHeader'
 
@@ -117,6 +123,7 @@ export const DesignInput = (): JSX.Element | null => {
     clearErrors,
     setError,
     setFocus,
+    trigger,
   } = useForm<FormStartPageInput>({
     mode: 'onBlur',
     defaultValues: startPageData,
@@ -153,6 +160,17 @@ export const DesignInput = (): JSX.Element | null => {
     }
   }, [designState, setFocus])
 
+  const formTitleValidationRules = useFormTitleValidationRules()
+  const queryClient = useQueryClient()
+  const titleMutation = useMutation(
+    (title: string) => updateFormTitle(formId, title),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(adminFormKeys.id(formId))
+      },
+    },
+  )
+
   // Save design handlers
   const uploadLogoMutation = useMutation((image: File) =>
     uploadLogo({ formId, image }),
@@ -187,14 +205,18 @@ export const DesignInput = (): JSX.Element | null => {
 
   const handleUpdateDesign = handleSubmit(
     async (startPageData: FormStartPageInput) => {
-      const { logo, attachment, estTimeTaken, ...rest } = startPageData
+      const { logo, attachment, estTimeTaken, title, ...rest } = startPageData
       const estTimeTakenTransformed =
         estTimeTaken === '' ? undefined : estTimeTaken
+      if (showDesignDrawerFormTitle) {
+        await titleMutation.mutateAsync(title)
+      }
       if (logo.state !== FormLogoState.Custom) {
         startPageMutation.mutate(
           {
             logo: { state: logo.state },
             estTimeTaken: estTimeTakenTransformed,
+            title,
             ...rest,
           },
           { onSuccess: handleCloseDrawer },
@@ -205,6 +227,7 @@ export const DesignInput = (): JSX.Element | null => {
           {
             logo: { state: FormLogoState.Custom, ...customLogoMeta },
             estTimeTaken: estTimeTakenTransformed,
+            title,
             ...rest,
           },
           { onSuccess: handleCloseDrawer },
@@ -342,7 +365,35 @@ export const DesignInput = (): JSX.Element | null => {
         <FormErrorMessage>{errors.colorTheme?.message}</FormErrorMessage>
       </FormControl>
 
-      {showDesignDrawerFormTitle && <FormDetailsSection />}
+      {showDesignDrawerFormTitle && (
+        <FormControl
+          isReadOnly={startPageMutation.isLoading}
+          isInvalid={!!errors.title}
+          onFocus={setToEditingHeader}
+          isRequired
+        >
+          <FormLabel isRequired>{t('features.common.formName')}</FormLabel>
+          <Controller
+            name="title"
+            control={control}
+            rules={formTitleValidationRules}
+            render={({ field: { onChange, onBlur, ...field } }) => (
+              <Input
+                {...field}
+                onChange={(e) => {
+                  onChange(e)
+                  trigger('title')
+                }}
+                onBlur={() => {
+                  onBlur()
+                  trigger('title')
+                }}
+              />
+            )}
+          />
+          <FormErrorMessage>{errors.title?.message}</FormErrorMessage>
+        </FormControl>
+      )}
 
       <FormControl
         isReadOnly={startPageMutation.isLoading}
@@ -423,6 +474,7 @@ export const DesignDrawer = ({
   useEffect(() => {
     setStartPageData({
       ...startPage,
+      title: startPage.title || '',
       estTimeTaken: startPage.estTimeTaken || '',
       attachment:
         startPage.logo.state !== FormLogoState.Custom

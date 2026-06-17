@@ -2943,6 +2943,7 @@ describe('admin-form.form.routes', () => {
     }
 
     const MOCK_UPDATED_START_PAGE: FormStartPage = {
+      title: 'new mock form title',
       paragraph: 'new mock start page title',
       colorTheme: FormColorTheme.Blue,
       logo: {

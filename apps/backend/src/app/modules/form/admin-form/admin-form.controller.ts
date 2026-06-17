@@ -3117,6 +3117,7 @@ export const _handleUpdateStartPage: ControllerHandler<
 export const handleUpdateStartPage = [
   celebrate({
     [Segments.BODY]: {
+      title: Joi.string().min(4).max(200).required(),
       paragraph: Joi.string().allow('').optional(),
       estTimeTaken: Joi.number().min(1).max(1000).optional(),
       colorTheme: Joi.string()

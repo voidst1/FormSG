@@ -636,6 +636,7 @@ const compileFormModel = (db: Mongoose): IFormModel => {
       },
 
       startPage: {
+        title: String,
         paragraph: String,
         estTimeTaken: Number,
         colorTheme: {

@@ -58,6 +58,7 @@ export type TranslationOptionMapping = {
 export type FormStartPage = {
   logo: FormLogo
   colorTheme: FormColorTheme
+  title: string
   estTimeTaken?: number
   paragraph?: string
   paragraphTranslations?: TranslationMapping[]
